@@ -57,5 +57,24 @@ test_tls_tcp_context() (
   [ -r "$DOCKER_CERT_PATH/key.pem" ] || fail 'missing propagated client key'
 )
 
+test_plaintext_tcp_context_is_rejected() (
+  unset DOCKER_HOST DOCKER_TLS_VERIFY DOCKER_CERT_PATH TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE
+
+  docker() {
+    case "$*" in
+    'context show') printf '%s\n' remote-plaintext ;;
+    *'{{.Endpoints.docker.Host}}'*) printf '%s\n' 'tcp://docker.example.test:2375' ;;
+    *'{{json .TLSMaterial.docker}}'*) printf '%s\n' null ;;
+    *) return 1 ;;
+    esac
+  }
+
+  if configure_testcontainers_docker_host 2>/dev/null; then
+    fail 'expected plaintext TCP Docker context to be rejected'
+  fi
+  [ -z "${DOCKER_HOST-}" ] || fail 'plaintext Docker host was exported'
+)
+
 test_orbstack_context
 test_tls_tcp_context
+test_plaintext_tcp_context_is_rejected

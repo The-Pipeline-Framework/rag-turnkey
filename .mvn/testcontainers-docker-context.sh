@@ -17,7 +17,10 @@ configure_testcontainers_docker_host() {
   if [ "${docker_host#tcp://}" != "$docker_host" ]; then
     docker_tls_material="$(docker context inspect "$docker_context" --format '{{json .TLSMaterial.docker}}' 2>/dev/null)" || return 1
     case "$docker_tls_material" in
-    '' | null | '{}' | '<no value>') ;;
+    '' | null | '{}' | '<no value>')
+      printf '%s\n' "Docker context '$docker_context' uses tcp:// without readable TLS material" >&2
+      return 1
+      ;;
     *)
       if [ -z "${DOCKER_CERT_PATH-}" ]; then
         docker_tls_path="$(docker context inspect "$docker_context" --format '{{.Storage.TLSPath}}' 2>/dev/null)" || return 1

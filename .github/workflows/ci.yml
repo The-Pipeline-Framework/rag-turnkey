@@ -30,6 +30,7 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+          cache-path: ${{ github.workspace }}/.m2/repository
 
       - name: Verify
         run: ./mvnw -B verify -Dquarkus.container-image.build=false --no-transfer-progress -Dmaven.repo.local="$GITHUB_WORKSPACE/.m2/repository"
