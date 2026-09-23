@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "suites": {
+    "system": {
+      "command": [
+        "bash",
+        "scripts/run-system-suite.sh"
+      ],
+      "timeoutMinutes": 120
+    }
+  }
+}
