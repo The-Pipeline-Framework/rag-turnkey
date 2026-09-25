@@ -23,7 +23,7 @@ command. `TPF Candidate Build` and the trusted publisher create an immutable, so
 
 For a coordinated change, wait for `TPF Candidate Publish` to succeed for the current head SHA of every
 participating pull request. Then run `TPF System Tests — Compatibility Set` in
-`The-Pipeline-Framework/pipelineframework` with one stable set ID and the pull-request URLs. Any new commit
+`The-Pipeline-Framework/pipelineframework` with one stable set ID and two to ten pull-request URLs. Any new commit
 invalidates the previous set: wait for its new candidate publisher and dispatch again. Do not substitute snapshots,
 branch heads, source checkouts or a composite Maven reactor. See the canonical
 [cross-repository system-test runbook](https://github.com/The-Pipeline-Framework/pipelineframework/blob/main/docs/evolve/cross-repository-system-tests.md).
