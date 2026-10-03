@@ -34,3 +34,8 @@ jobs:
 
       - name: Verify
         run: ./mvnw -B verify -Dquarkus.container-image.build=false --no-transfer-progress -Dmaven.repo.local="$GITHUB_WORKSPACE/.m2/repository"
+
+      - name: Produce and check application Releases
+        run: |
+          ./mvnw -B verify -DskipTests -Dquarkus.container-image.build=false -Dtpf.release.skip=false -Dtpf.release.version="ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" -Dtpf.release.allowLocalUris=true --no-transfer-progress -Dmaven.repo.local="$GITHUB_WORKSPACE/.m2/repository"
+          python3 scripts/check-release-artifacts.py indexer query
