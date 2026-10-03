@@ -34,3 +34,11 @@ jobs:
 
       - name: Verify
         run: ./mvnw -B verify -Dquarkus.container-image.build=false --no-transfer-progress -Dmaven.repo.local="$GITHUB_WORKSPACE/.m2/repository"
+
+      - name: Check release verifier
+        run: python3 scripts/test_release_artifacts.py
+
+      - name: Produce and check application Releases
+        run: |
+          ./mvnw -B -pl indexer,query org.pipelineframework:pipelineframework-release-maven-plugin:generate-release-descriptor@produce-application-release org.codehaus.mojo:build-helper-maven-plugin:attach-artifact@attach-release-application-archive -Dtpf.release.skip=false -Dtpf.release.version="ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" -Dtpf.release.allowLocalUris=true --no-transfer-progress -Dmaven.repo.local="$GITHUB_WORKSPACE/.m2/repository"
+          python3 scripts/check-release-artifacts.py indexer query
