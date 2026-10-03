@@ -23,3 +23,46 @@ QUERY allows two minutes per local Ollama request because loading the answer mod
 Chunk IDs encode immutable source provenance, index, and content hash. The model authors only answer text and cited chunk IDs. The final validator rejects unknown, duplicate, or missing citations and copies source IDs/excerpts only from retrieved typed context.
 
 The sibling `rag-composition-proof` remains the deterministic, network-free CI fixture. Its shared in-memory binding is a proof convenience, not the recommended deployment topology.
+
+## Produce application Releases
+
+INDEXER and QUERY are independently deployable applications. Each Release pins a complete Quarkus fast-JAR ZIP,
+including its runtime dependencies and compiler-produced `META-INF/pipeline/` metadata. Ordinary verification skips
+release production; explicitly enable it and supply a Release version:
+
+```sh
+./mvnw verify -Dquarkus.container-image.build=false \
+  -Dtpf.release.skip=false -Dtpf.release.version=local-1 -Dtpf.release.allowLocalUris=true \
+  -Dmaven.repo.local="$PWD/.m2/repository"
+tpf release verify --release indexer/target/pipeline-release.json
+tpf release verify --release query/target/pipeline-release.json
+```
+
+Outputs are `indexer/target/pipeline-release.json` and `query/target/pipeline-release.json`, with their respective ZIPs
+under `target/pipeline-release-artifacts/` in each module. Keep the two descriptors separate. The local `file:` URIs
+are useful for development; they are not promotable.
+
+Keep the descriptor and ZIP together. If a rebuild changes the packaged bytes, choose a new Release version;
+the producer rejects replacement of an existing immutable Release identity.
+
+For Maven publication, first give the application reactor a non-SNAPSHOT version, then produce and publish each
+application's archive to your configured artefact repository. For example, after changing the reactor to `1.0.0`:
+
+```sh
+./mvnw deploy -pl indexer -am -Dquarkus.container-image.build=false -Dmaven.deploy.skip=false \
+  -Dtpf.release.skip=false -Dtpf.release.version=1.0.0 \
+  -Dtpf.release.artifactUri=maven:org.pipelineframework:rag-turnkey-indexer:zip:application:1.0.0 \
+  -Dmaven.repo.local="$PWD/.m2/repository"
+./mvnw deploy -pl query -Dquarkus.container-image.build=false -Dmaven.deploy.skip=false \
+  -Dtpf.release.skip=false -Dtpf.release.version=1.0.0 \
+  -Dtpf.release.artifactUri=maven:org.pipelineframework:rag-turnkey-query:zip:application:1.0.0 \
+  -Dmaven.repo.local="$PWD/.m2/repository"
+```
+
+The first command also installs and publishes the reactor parent and shared support module; the second uses those
+installed dependencies without republishing them. The generated ZIP is attached with classifier `application`; configure standard Maven publication credentials and
+repository separately. Preserve each descriptor unchanged alongside its published ZIP. The CLI then verifies or deploys
+that descriptor using external resolver and deployment configuration. Maven selects no Cloud deployment target.
+See [Release production](https://pipelineframework.org/deploy/release-descriptors) and
+[CLI deployment](https://pipelineframework.org/deploy/deployment-cli). PostgreSQL/pgvector, Ollama, queues and other
+external services remain deployment prerequisites, not contents of an application Release.

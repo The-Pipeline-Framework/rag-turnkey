@@ -31,3 +31,6 @@ target/
 *.iml
 __pycache__/
 *.py[cod]
+
+# Local CLI verification cache
+.tpf/
